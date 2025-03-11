@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Composition</title>
+    <style>
+        body {
+            font-family: 'Copperplate';
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100vh;
+            background-color: #f0f0f0;
+            align-items: center;
+        }
+
+        h1 {
+            margin-top: 20px;
+            font-size: 36px;
+            color: rgb(140, 220, 138);
+        }
+
+        #songButtonsContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+            background-color: rgb(140, 220, 138);
+            width: 100%;
+            position: fixed;
+            bottom: 0;
+            left: 10;
+            padding-left: 20px;
+            padding-right: 20px;
+            border-radius: 10px 10px 0 0;
+        }
+
+        #songButtonsContainer button {
+            color: rgb(115, 206, 228);
+            font-family: 'Copperplate';
+            font-size: 15px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            min-width: 120px;
+        }
+
+        #songButtonsContainer button:hover {
+            transform: scale(1.05);
+            background-color: #f3a1a1 !important;
+            color:rgb(255, 255, 255) !important;
+        }
+
+        .home-button {
+            position: fixed;
+            top: 0px;
+            left: 20px;
+            background-color: transparent;
+            color: rgb(115, 206, 228);
+            font-size: 48px;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .home-button:hover {
+            color: #f3a1a1;
+            transform: scale(1.1);
+        }
+
+        .home-button:focus {
+            outline: none;
+        }
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/tone@14.8.42/build/Tone.js"></script>
+</head>
+<body>
+    <h1> RANDOMIZER </h1> 
+    <button id="homeButton" class="home-button">←</button>
+    <div id="songButtonsContainer"></div>
+    <svg width="500" height="675">
+        <path id="swirlPath" fill="#f3a1a1" stroke="#73CEE4" stroke-width="8"/>
+    </svg>
+    <audio id="audio" src="producer_tags/pluh.mp3" preload="auto"></audio>
+
+    <script>
+        const homebutton = document.getElementById('homeButton');
+        const audio = document.getElementById('audio');
+
+        homebutton.addEventListener('click', () => {
+            audio.play();
+            setTimeout(() => {
+                location.href = 'index.html';
+            }, audio.duration * 1000);
+        });
+        let randomness = 2;
+
+        document.addEventListener("DOMContentLoaded", () => {
+        let isDragging = false;
+        let lastAngle = null;
+        const svgPath = document.getElementById("swirlPath");
+
+        document.addEventListener("mousedown", (event) => {
+            isDragging = true;
+            lastAngle = null;
+        });
+
+        document.addEventListener("mouseup", () => {
+            isDragging = false;
+        });
+
+        document.addEventListener("mousemove", (event) => {
+            if (!isDragging) return;
+
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            const dx = event.clientX - centerX;
+            const dy = event.clientY - centerY;
+            
+            const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+            
+            if (lastAngle !== null) {
+                let angleDifference = angle - lastAngle;
+                
+                if (angleDifference > 180) angleDifference -= 360;
+                if (angleDifference < -180) angleDifference += 360;
+                
+                if (angleDifference > 0) {
+                    randomness = Math.min(randomness + 1, 100);
+                } else {
+                    randomness = Math.max(randomness - 1, 2);
+                }
+                
+                updateSwirl();
+            }
+            
+            lastAngle = angle;
+        });
+
+        function updateSwirl() {
+            const turns = randomness / 15;
+            let pathData = "M 250 250 ";
+            
+            for (let t = 0; t <= turns; t += 0.1) {
+                let angle = t * Math.PI * 2;
+                let radius = 5 + t * 30;
+                let x = 250 + radius * Math.cos(angle);
+                let y = 250 + radius * Math.sin(angle);
+                pathData += `L ${x} ${y} `;
+            }
+            
+            svgPath.setAttribute("d", pathData);
+            svgPath.setAttribute("stroke-linecap", "round");
+
+        }
+    });
+
+    const songs = [["I Bet On Losing Dogs", "Stop Breathing", "Masquerade Waltz", "Howl's Moving Castle Theme", "SDP Interlude", "Axel F", "I'm God"],
+                 ['E4', 'Db4', 'D4', 'E4', 'D4', 'Db4', 'E4', 'E4', 'D4', 'Db4', 'D4', 'E4', 'D4', 'Db4', 'B3', 'Db4', 'D4', 'E4', 'D4', 'Db4', 'E4', 'D4', 'Db4', 'D4', 'A3', 'E4', 'D4', 'Db4', 'B3', 'Db4', 'B3', 'A3', 'D4', 'Db4', 'Db4', 'Db4', 'B3', 'Db4', 'A3', 'B3', 'Ab3', 'A3', 'Ab3', 'F#3', 'Ab3', 'A3', 'B3', 'Db4', 'Db4', 'Db4', 'B3', 'Db4', 'A3', 'B3', 'Db4', 'D4', 'D4', 'E4', 'D4', 'Db4', 'Db4', 'B3', 'A3', 'D4', 'Db4', 'Ab3', 'Db4', 'B3', 'A3', 'D4', 'Db4', 'F#3'],
+                 ['A4', 'Bb4', 'D4', 'Bb2', 'A2', 'Bb4', 'A4', 'Bb4', 'D4', 'Bb2', 'A2', 'Bb4', 'A4', 'Bb4', 'D4', 'Bb2', 'A2', 'Bb4', 'A4', 'Bb4', 'D4', 'Bb2', 'A2', 'Bb4', 'F5', 'D5', 'E5', 'A4', 'D2', 'D2', 'F5', 'D5', 'E5', 'A4', 'D2', 'D2', 'F5', 'D5', 'E5', 'A4', 'D2', 'D2', 'F5', 'D5', 'E5', 'A4', 'D2', 'D2'],
+                 ['E4', 'Ab4', 'A4', 'C5', 'Eb5', 'E5', 'E4', 'Ab4', 'A4', 'C5', 'Eb5', 'E5', 'E4', 'Ab4', 'A4', 'C5', 'Eb5', 'E5', 'Ab4', 'A4', 'C5', 'Eb5', 'E5', 'Ab4', 'A4', 'C5', 'Eb5', 'E5', 'E5', 'E5', 'Eb5', 'G5', 'Gb5', 'Gb5', 'E5', 'Gb5', 'E5', 'E5', 'Eb5', 'G5', 'Gb5', 'Gb5', 'E5', 'Gb5', 'E5', 'E5', 'D5', 'C5', 'B4', 'Bb4', 'Bb5', 'Bb4', 'E5', 'D5', 'C5', 'B4', 'Bb4', 'Bb5', 'Bb4', 'A4', 'B4', 'A4', 'B4', 'Ab4', 'Ab4', 'G4', 'A4', 'G4', 'A4', 'Gb4', 'Gb4', 'E4', 'Gb4', 'E4', 'Gb4', 'E4', 'Db4', 'D4', 'Eb4', 'E4', 'F4', 'Gb4', 'G4', 'Ab4', 'A4', 'Bb4', 'B4', 'C5', 'B4', 'Bb4', 'B4', 'D5', 'C5', 'B4'],
+                 ['D4', 'G4', 'Bb4', 'D5', 'D5', 'C5', 'Bb4', 'A4', 'Bb4', 'G4', 'Bb4', 'D5', 'G5', 'G5', 'G5', 'F5', 'Eb5', 'F5', 'A4', 'D5', 'F5', 'A5', 'G5', 'F5', 'E5', 'F5', 'G5', 'F5', 'E5', 'D5', 'C5', 'Bb4', 'C5', 'D5', 'C5', 'G4', 'A4', 'D4', 'G4', 'Bb4', 'D5', 'D5', 'C5', 'Bb4', 'A4', 'Bb4', 'G4', 'Bb4', 'D5', 'G5', 'G5', 'G5', 'F5', 'Eb5', 'F5', 'A4', 'D5', 'F5', 'A5', 'G5', 'F5', 'E5', 'Eb5', 'E5', 'G5', 'F5', 'E5', 'D5', 'Db5', 'D5', 'D5', 'C5', 'Bb4', 'A4', 'B5', 'Db5', 'D5'],
+                 ['G4', 'F4', 'G4', 'F4', 'G4', 'F4', 'G4', 'F4', 'G4', 'G4', 'G4', 'G4', 'Bb4', 'F4', 'F4', 'F4', 'F4', 'Bb4', 'F4', 'F4', 'F4', 'F4', 'Bb4', 'Bb4', 'F4', 'F4', 'F4', 'F4', 'F4', 'Eb4', 'G4', 'G4', 'G4', 'G4', 'Bb4', 'Bb4', 'F4', 'F4', 'F4', 'F4', 'G4', 'F4', 'F4', 'F4', 'Eb4', 'G4', 'G4', 'F4', 'F4', 'F4', 'Eb4', 'G4', 'G4', 'F4', 'G4', 'G4', 'G4', 'G4', 'Bb4', 'Bb4', 'F4', 'F4', 'F4', 'F4', 'Bb4', 'Bb4', 'G4', 'G4', 'Eb4', 'G4', 'G4', 'F4', 'F4', 'F4', 'Eb4', 'G4', 'G4', 'F4', 'G4', 'G4', 'G4', 'G4', 'Bb4', 'Bb4', 'F4', 'F4', 'F4', 'F4', 'Bb4', 'Bb4', 'G4', 'G4', 'Eb4', 'G4', 'G4', 'F4', 'F4', 'F4', 'Eb4', 'G4', 'G4'],
+                 ['D4', 'F4', 'D4', 'D4', 'G4', 'D4', 'C4', 'D4', 'A4', 'D4', 'D4', 'Bb4', 'A4', 'F4', 'D4', 'A4', 'D5', 'D4', 'C4', 'C4', 'A3', 'E4', 'D4', 'D4', 'F4', 'D4', 'D4', 'G4', 'D4', 'C4', 'D4', 'A4', 'D4', 'D4', 'Bb4', 'A4', 'F4', 'D4', 'A4', 'D5', 'D4', 'C4', 'C4', 'A3', 'E4', 'D4'],
+                 ['Db6', 'F#6', 'E6', 'Db6', 'F#6', 'E6', 'Gb5', 'Gb5', 'Gb5', 'B5', 'A5', 'B5', 'A5', 'Db6', 'F#6', 'E6', 'Db6', 'F#6', 'E6', 'Gb5', 'Gb5', 'Gb5', 'B5', 'A5', 'B5', 'G5', 'Db6', 'F#6', 'E6', 'Db6', 'F#6', 'E6', 'Gb5', 'Gb5', 'Gb5', 'B5', 'A5', 'B5', 'A5', 'A5', 'G5', 'A5', 'G5', 'Gb5', 'E5', 'A4', 'D5', 'Gb5']]
+    
+    const synth = new Tone.Synth({
+        oscillator: {
+            type: "sine",
+        },
+        envelope: {
+            attack: 0.2,
+            decay: 0.1,
+            sustain: 0.8,
+            release: 0.2
+        }
+    }).toDestination();
+
+
+        let currentSequence = null;
+
+        Tone.context.resume().then(() => {
+            console.log("Audio context resumed!");
+        });
+
+        function createSongButtons() {
+            const songContainer = document.getElementById('songButtonsContainer');
+            songs[0].forEach((songName, index) => {
+                const button = document.createElement('button');
+                button.textContent = songName;
+                button.style.margin = '10px';
+                button.onclick = () => getNotes(index, button);
+                songContainer.appendChild(button);
+            });
+        }
+
+        function stopCurrentSong() {
+            if (currentSequence) {
+                currentSequence.stop();
+            }
+        }
+
+        var selected = [false, false, false, false, false, false, false];
+
+        function getNotes(index, button) {
+            var notes = [];
+            if (selected[index]) {
+                button.style.backgroundColor = "#FFFFFF";
+                button.style.color = "#73CEE4";
+                selected[index] = false;
+            } else {
+                button.style.backgroundColor = "#73CEE4";
+                button.style.color = "#FFFFFF";
+                selected[index] = true;
+            }
+            for (let i = 0; i < 7; i++) {
+                if (selected[i]) {
+                    for (let j = 0; j < songs[i + 1].length; j++) {
+                        notes.push(songs[i + 1][j])
+                    }
+                    console.log("including: ", songs[0][i])
+                }
+            }
+            console.log(selected);
+            console.log(notes);
+
+            randomizeNotes(notes);
+        }
+
+        function mapper(val, x, y, a, b) {
+            return a + (b - a) * (val - x) / (y - x);
+        }
+
+        function shuffler(chunks) {
+            for (let i = chunks.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [chunks[i], chunks[j]] = [chunks[j], chunks[i]];
+            }
+            return chunks;
+        }
+
+        function randomizeNotes(notes) {
+            randomNotes = [];
+            chunkLength = Math.round(mapper(randomness, 100, 2, 1, notes.length));
+            chunkCount = Math.round(notes.length / chunkLength);
+            leftovers = notes.length - (chunkLength * chunkCount);
+            if (leftovers > 0) {
+                chunkCount += 1;
+            }
+            chunks = [];
+            for (let i = 0; i < chunkCount; i++) {
+                chunks.push(notes.slice(i * chunkLength, Math.min((i + 1) * chunkLength), chunkLength))
+            }
+            shuffledChunks = shuffler(chunks);
+            for (let c = 0; c < chunkCount; c++) {
+                chunker = shuffledChunks[c];
+                for (let n = 0; n < chunker.length; n++) {
+                    randomNotes.push(chunker[n]);
+                }
+            }
+
+            playNotes(randomNotes);
+        }
+
+        function playNotes(randomNotes) {
+            stopCurrentSong();
+            currentSequence = new Tone.Sequence((time, note) => {
+                synth.triggerAttackRelease(note, "4n", time);
+            }, randomNotes, "4n");
+            currentSequence.start();
+            Tone.Transport.start();
+        }
+
+        createSongButtons();
+    </script>
+</body>
+</html>

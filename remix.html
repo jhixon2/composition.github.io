@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Composition</title>
+    <style>
+        body {
+            font-family: 'Copperplate';
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100vh;
+            background-color: #f0f0f0;
+            align-items: center;
+        }
+
+        h1 {
+            margin-top: 20px;
+            font-size: 36px;
+            color: rgb(255, 204, 153);
+        }
+
+        #songButtonsContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+            background-color: rgb(255, 204, 153);
+            width: 100%;
+            position: fixed;
+            bottom: 0;
+            left: 10;
+            padding-left: 20px;
+            padding-right: 20px;
+            border-radius: 10px 10px 0 0;
+        }
+
+        #songButtonsContainer button {
+            color: rgb(115, 206, 228);
+            font-family: 'Copperplate';
+            font-size: 15px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            min-width: 120px;
+        }
+
+        #songButtonsContainer button:hover {
+            transform: scale(1.05);
+            background-color: #ffd480 !important;
+            color:rgb(255, 255, 255) !important;
+        }
+
+        .home-button {
+            position: fixed;
+            top: 0px;
+            left: 20px;
+            background-color: transparent;
+            color: rgb(115, 206, 228);
+            font-size: 48px;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .home-button:hover {
+            color: #ffd480;
+            transform: scale(1.1);
+        }
+
+        .home-button:focus {
+            outline: none;
+        }
+
+        #tunerSlider {
+            background: rgb(115, 206, 228); 
+            outline: none;
+            border-radius: 10px;
+        }
+
+        #tunerSlider::-webkit-slider-runnable-track {
+            background: rgb(115, 206, 228); 
+            border-radius: 10px;
+        }
+
+        canvas {
+            border: 1px solid "#f0f0f0";
+        }
+
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/tone@14.8.42/build/Tone.js"></script>
+</head>
+<body>
+    <h1> REMIXER </h1> 
+    <button id="homeButton" class="home-button">←</button>
+    <div id="songButtonsContainer"></div>
+    <audio id="audio" src="producer_tags/f1lthy-producer-tag.mp3" preload="auto"></audio>
+
+    <div id="slider-container" style="position: fixed; bottom: 140px; left: 120px; right: 120px;">
+        <label for="tunerSlider" style="display: block; position: fixed; bottom: 110px; left: 675px; text-align: center; color: #ffd480; font-size: 18px;">Steps: <span id="tunerValue">12</span></label>
+        <input type="range" id="tunerSlider" min="1" max="50" value="12" step="1" 
+            style="width: 100%; height: 10px; background: #ddd; border-radius: 5px; outline: none;">
+    </div>
+
+    <canvas id="circleCanvas" width="500" height="500" style="position: fixed; bottom: 200px; "></canvas>
+
+    <script>
+        let tuner = 12;
+        let fifth = 7;
+
+        const canvas = document.getElementById('circleCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const radius = 200;
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        function drawClock(tuner, fifth) {
+            var angleIncrement = (2 * Math.PI) / tuner;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.strokeStyle = "#ffd480";
+            ctx.stroke();
+
+            ctx.font = '24px CopperPlate';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = "#73CEE4";
+            
+            for (let i = 0; i < tuner; i++) {
+                const angle = ((i - 2) - tuner) * angleIncrement;
+                const x = centerX + Math.cos(angle) * radius;
+                const y = centerY + Math.sin(angle) * radius;
+                
+                ctx.fillText(i + 1, x, y);
+            }
+
+            for (let i = 0; i < tuner; i++) {
+                const startAngle = i * angleIncrement;
+                const startX = centerX + Math.cos(startAngle) * radius;
+                const startY = centerY + Math.sin(startAngle) * radius;
+
+                const endIndex = (i + fifth) % tuner;
+                const endAngle = endIndex * angleIncrement;
+                const endX = centerX + Math.cos(endAngle) * radius;
+                const endY = centerY + Math.sin(endAngle) * radius;
+
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+            }
+
+            ctx.fillText(fifth, centerX, centerY);
+        }
+
+        drawClock(tuner, fifth);
+
+        const tunerSlider = document.getElementById('tunerSlider');
+        const tunerValue = document.getElementById('tunerValue');
+        tunerSlider.addEventListener('input', () => {
+            tuner = parseInt(tunerSlider.value);
+            tunerValue.textContent = tuner;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            fifth = fifthFinder(tuner);
+            drawClock(tuner, fifth);
+        });
+
+        const homebutton = document.getElementById('homeButton');
+        const audio = document.getElementById('audio');
+
+        homebutton.addEventListener('click', () => {
+            audio.play();
+            setTimeout(() => {
+                location.href = 'index.html';
+            }, audio.duration * 400);
+        });
+
+        const songs = [["I Bet On Losing Dogs", "Stop Breathing", "Masquerade Waltz", "Howl's Moving Castle Theme", "SDP Interlude", "Axel F", "I'm God"],
+                 ['E4', 'Db4', 'D4', 'E4', 'D4', 'Db4', 'E4', 'E4', 'D4', 'Db4', 'D4', 'E4', 'D4', 'Db4', 'B3', 'Db4', 'D4', 'E4', 'D4', 'Db4', 'E4', 'D4', 'Db4', 'D4', 'A3', 'E4', 'D4', 'Db4', 'B3', 'Db4', 'B3', 'A3', 'D4', 'Db4', 'Db4', 'Db4', 'B3', 'Db4', 'A3', 'B3', 'Ab3', 'A3', 'Ab3', 'F#3', 'Ab3', 'A3', 'B3', 'Db4', 'Db4', 'Db4', 'B3', 'Db4', 'A3', 'B3', 'Db4', 'D4', 'D4', 'E4', 'D4', 'Db4', 'Db4', 'B3', 'A3', 'D4', 'Db4', 'Ab3', 'Db4', 'B3', 'A3', 'D4', 'Db4', 'F#3'],
+                 ['A4', 'Bb4', 'D4', 'Bb2', 'A2', 'Bb4', 'A4', 'Bb4', 'D4', 'Bb2', 'A2', 'Bb4', 'A4', 'Bb4', 'D4', 'Bb2', 'A2', 'Bb4', 'A4', 'Bb4', 'D4', 'Bb2', 'A2', 'Bb4', 'F5', 'D5', 'E5', 'A4', 'D2', 'D2', 'F5', 'D5', 'E5', 'A4', 'D2', 'D2', 'F5', 'D5', 'E5', 'A4', 'D2', 'D2', 'F5', 'D5', 'E5', 'A4', 'D2', 'D2'],
+                 ['E4', 'Ab4', 'A4', 'C5', 'Eb5', 'E5', 'E4', 'Ab4', 'A4', 'C5', 'Eb5', 'E5', 'E4', 'Ab4', 'A4', 'C5', 'Eb5', 'E5', 'Ab4', 'A4', 'C5', 'Eb5', 'E5', 'Ab4', 'A4', 'C5', 'Eb5', 'E5', 'E5', 'E5', 'Eb5', 'G5', 'Gb5', 'Gb5', 'E5', 'Gb5', 'E5', 'E5', 'Eb5', 'G5', 'Gb5', 'Gb5', 'E5', 'Gb5', 'E5', 'E5', 'D5', 'C5', 'B4', 'Bb4', 'Bb5', 'Bb4', 'E5', 'D5', 'C5', 'B4', 'Bb4', 'Bb5', 'Bb4', 'A4', 'B4', 'A4', 'B4', 'Ab4', 'Ab4', 'G4', 'A4', 'G4', 'A4', 'Gb4', 'Gb4', 'E4', 'Gb4', 'E4', 'Gb4', 'E4', 'Db4', 'D4', 'Eb4', 'E4', 'F4', 'Gb4', 'G4', 'Ab4', 'A4', 'Bb4', 'B4', 'C5', 'B4', 'Bb4', 'B4', 'D5', 'C5', 'B4'],
+                 ['D4', 'G4', 'Bb4', 'D5', 'D5', 'C5', 'Bb4', 'A4', 'Bb4', 'G4', 'Bb4', 'D5', 'G5', 'G5', 'G5', 'F5', 'Eb5', 'F5', 'A4', 'D5', 'F5', 'A5', 'G5', 'F5', 'E5', 'F5', 'G5', 'F5', 'E5', 'D5', 'C5', 'Bb4', 'C5', 'D5', 'C5', 'G4', 'A4', 'D4', 'G4', 'Bb4', 'D5', 'D5', 'C5', 'Bb4', 'A4', 'Bb4', 'G4', 'Bb4', 'D5', 'G5', 'G5', 'G5', 'F5', 'Eb5', 'F5', 'A4', 'D5', 'F5', 'A5', 'G5', 'F5', 'E5', 'Eb5', 'E5', 'G5', 'F5', 'E5', 'D5', 'Db5', 'D5', 'D5', 'C5', 'Bb4', 'A4', 'B5', 'Db5', 'D5'],
+                 ['G4', 'F4', 'G4', 'F4', 'G4', 'F4', 'G4', 'F4', 'G4', 'G4', 'G4', 'G4', 'Bb4', 'F4', 'F4', 'F4', 'F4', 'Bb4', 'F4', 'F4', 'F4', 'F4', 'Bb4', 'Bb4', 'F4', 'F4', 'F4', 'F4', 'F4', 'Eb4', 'G4', 'G4', 'G4', 'G4', 'Bb4', 'Bb4', 'F4', 'F4', 'F4', 'F4', 'G4', 'F4', 'F4', 'F4', 'Eb4', 'G4', 'G4', 'F4', 'F4', 'F4', 'Eb4', 'G4', 'G4', 'F4', 'G4', 'G4', 'G4', 'G4', 'Bb4', 'Bb4', 'F4', 'F4', 'F4', 'F4', 'Bb4', 'Bb4', 'G4', 'G4', 'Eb4', 'G4', 'G4', 'F4', 'F4', 'F4', 'Eb4', 'G4', 'G4', 'F4', 'G4', 'G4', 'G4', 'G4', 'Bb4', 'Bb4', 'F4', 'F4', 'F4', 'F4', 'Bb4', 'Bb4', 'G4', 'G4', 'Eb4', 'G4', 'G4', 'F4', 'F4', 'F4', 'Eb4', 'G4', 'G4'],
+                 ['D4', 'F4', 'D4', 'D4', 'G4', 'D4', 'C4', 'D4', 'A4', 'D4', 'D4', 'Bb4', 'A4', 'F4', 'D4', 'A4', 'D5', 'D4', 'C4', 'C4', 'A3', 'E4', 'D4', 'D4', 'F4', 'D4', 'D4', 'G4', 'D4', 'C4', 'D4', 'A4', 'D4', 'D4', 'Bb4', 'A4', 'F4', 'D4', 'A4', 'D5', 'D4', 'C4', 'C4', 'A3', 'E4', 'D4'],
+                 ['Db6', 'F#6', 'E6', 'Db6', 'F#6', 'E6', 'Gb5', 'Gb5', 'Gb5', 'B5', 'A5', 'B5', 'A5', 'Db6', 'F#6', 'E6', 'Db6', 'F#6', 'E6', 'Gb5', 'Gb5', 'Gb5', 'B5', 'A5', 'B5', 'G5', 'Db6', 'F#6', 'E6', 'Db6', 'F#6', 'E6', 'Gb5', 'Gb5', 'Gb5', 'B5', 'A5', 'B5', 'A5', 'A5', 'G5', 'A5', 'G5', 'Gb5', 'E5', 'A4', 'D5', 'Gb5']]
+
+        const synth = new Tone.Synth({
+            oscillator: {
+                type: "sine",
+            },
+            envelope: {
+                attack: 0.2,
+                decay: 0.1,
+                sustain: 0.8,
+                release: 0.2
+            }
+        }).toDestination();
+
+        let currentSequence = null;
+
+        Tone.context.resume().then(() => {
+            console.log("Audio context resumed!");
+        });
+
+        var buttons = [];
+
+        function createSongButtons() {
+            const songContainer = document.getElementById('songButtonsContainer');
+            songs[0].forEach((songName, index) => {
+                const button = document.createElement('button');
+                button.textContent = songName;
+                button.style.margin = '10px';
+                button.onclick = () => getNotes(index, button);
+                songContainer.appendChild(button);
+                buttons.push(button);
+            });
+        }
+
+        function stopCurrentSong() {
+            if (currentSequence) {
+                currentSequence.stop();
+            }
+        }
+
+        function getNotes(index, button) {
+            var notes = [];
+            for (let b = 0; b < 7; b++) {
+                buttons[b].style.backgroundColor = "#FFFFFF";
+                buttons[b].style.color = "#73CEE4";
+            }
+            button.style.backgroundColor = "#73CEE4";
+            button.style.color = "#FFFFFF";
+            for (let i = 0; i < songs[index + 1].length; i++) {
+                notes.push(songs[index + 1][i])
+            }
+            console.log("remixing: ", songs[0][index])
+            remixNotes(notes, tuner);
+        }
+
+        const stepsList = [
+            { note: "A", steps: 0 },
+            { note: "A#", steps: 1 },
+            { note: "Bb", steps: 1 },
+            { note: "B", steps: 2 },
+            { note: "C", steps: 3 },
+            { note: "C#", steps: 4 },
+            { note: "Db", steps: 4 },
+            { note: "D", steps: 5 },
+            { note: "D#", steps: 6 },
+            { note: "Eb", steps: 6 },
+            { note: "E", steps: 7 },
+            { note: "F", steps: 8 },
+            { note: "F#", steps: 9 },
+            { note: "Gb", steps: 9 },
+            { note: "G", steps: 10 },
+            { note: "G#", steps: 11 },
+            { note: "Ab", steps: 11 },
+        ]
+
+        function getSteps(noteName) {
+            let octave = parseInt(noteName.charAt(noteName.length - 1));
+            let noteStr = noteName.slice(0, noteName.length - 1);
+            if (["A", "B", "Bb"].includes(noteStr)) {
+                stepCount = ((octave - 4) * 12) + stepsList.find(item => item.note === noteStr).steps
+            } else {
+                stepCount = ((octave - 5) * 12) + stepsList.find(item => item.note === noteStr).steps
+            }
+
+            return stepCount;
+        }
+
+        function remixNotes(notes, tuner) {
+            remixedNotes = [];
+            for (var n = 0; n < notes.length; n++) {
+                steps = getSteps(notes[n]);
+                remixedNotes.push(440 * (2 ** (steps / tuner)));
+            }
+            console.log(remixedNotes);
+
+            playNotes(remixedNotes);
+        }
+
+        function fifthFinder(tuner) {
+            // the perfect fifth ratio is 3:@
+            // goal is (2 ** (f / tuner)) == 3/2
+            // log2 (2 ** (f / tuner)) = log2 (3/2)
+            // (f / tuner) * log2 (2) = log2 (3/2)
+            // f / tuner = log2 (3/2)
+            // f = tuner * log2 (3/2)
+
+            return Math.round(tuner * (Math.log2(1.5)))
+        }
+
+        function playNotes(randomNotes) {
+            stopCurrentSong();
+            currentSequence = new Tone.Sequence((time, note) => {
+                synth.triggerAttackRelease(note, "4n", time);
+            }, randomNotes, "4n");
+            currentSequence.start();
+            Tone.Transport.start();
+        }
+
+        createSongButtons();
+
+    </script>
+</body>
+</html>

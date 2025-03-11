@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Composition</title>
+    <style>
+        body {
+            font-family: 'Copperplate';
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100vh;
+            background-color: #f0f0f0;
+            align-items: center;
+        }
+
+        h1 {
+            margin-top: 20px;
+            font-size: 36px;
+            color: rgb(204, 204, 255);
+        }
+
+        #songButtonsContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+            background-color: rgb(204, 204, 255);
+            width: 100%;
+            position: fixed;
+            bottom: 0;
+            left: 10;
+            padding-left: 20px;
+            padding-right: 20px;
+            border-radius: 10px 10px 0 0;
+        }
+
+        #songButtonsContainer button {
+            color: rgb(115, 206, 228);
+            font-family: 'Copperplate';
+            font-size: 15px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            min-width: 120px;
+        }
+
+        #songButtonsContainer button:hover {
+            transform: scale(1.05);
+            background-color: #9999ff!important;
+            color:rgb(255, 255, 255) !important;
+        }
+
+        .home-button {
+            position: fixed;
+            top: 0px;
+            left: 20px;
+            background-color: transparent;
+            color: rgb(115, 206, 228);
+            font-size: 48px;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .home-button:hover {
+            color: #9999ff;
+            transform: scale(1.1);
+        }
+
+        .home-button:focus {
+            outline: none;
+        }
+
+        #speedSlider {
+            background: rgb(115, 206, 228); 
+            outline: none;
+            border-radius: 10px;
+        }
+
+        #speedSlider::-webkit-slider-runnable-track {
+            background: rgb(115, 206, 228); 
+            border-radius: 10px;
+        }
+
+        #music-notes-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            padding-bottom: 200px;
+            padding-right: 150px;
+        }
+
+        #imgnote1, #imgnote2 {
+            width: 250px;
+            height: 250px;
+            margin: 125px;
+        }
+
+    </style>
+
+<script src="https://cdn.jsdelivr.net/npm/tone@14.8.42/build/Tone.js"></script>
+</head>
+<body>
+    <h1> INTERPOLATOR </h1> 
+    <button id="homeButton" class="home-button">←</button>
+    <div id="songButtonsContainer"></div>
+    <audio id="audio" src="producer_tags/bnyx.mp3" preload="auto"></audio>
+
+    <div id="music-notes-container" style="text-align: center;">
+        <img id="imgnote1" src="svgs/music-note-one.svg" alt="Music Note One" width="200" height="200" style="display: inline-block; margin-right: 20px;">
+        <img id="imgnote2" src="svgs/music-note-two.svg" alt="Music Note Two" width="200" height="200" style="display: inline-block; margin-right: 20px;">
+    </div>
+
+    <div id="slider-container" style="position: fixed; bottom: 140px; left: 120px; right: 120px;">
+        <label for="speedSlider" style="display: block; position: fixed; bottom: 110px; left: 675px; text-align: center; color: #9999ff; font-size: 18px;">Speed: <span id="speedValue">1</span></label>
+        <input type="range" id="speedSlider" min="1" max="10" value="1" step="1" 
+               style="width: 100%; height: 10px; background: #ddd; border-radius: 5px; outline: none;">
+    </div>
+
+    <script>
+        let speed = 1;
+        const speedSlider = document.getElementById('speedSlider');
+        const speedValue = document.getElementById('speedValue');
+        speedSlider.addEventListener('input', () => {
+            speed = parseInt(speedSlider.value);
+            speedValue.textContent = speed;
+        });
+
+        const homebutton = document.getElementById('homeButton');
+        const audio = document.getElementById('audio');
+
+        homebutton.addEventListener('click', () => {
+            audio.play();
+            setTimeout(() => {
+                location.href = 'index.html';
+            }, audio.duration * 250);
+        });
+
+        const songs = [["I Bet On Losing Dogs", "Stop Breathing", "Masquerade Waltz", "Howl's Moving Castle Theme", "SDP Interlude", "Axel F", "I'm God"],
+                 ['E4', 'Db4', 'D4', 'E4', 'D4', 'Db4', 'E4', 'E4', 'D4', 'Db4', 'D4', 'E4', 'D4', 'Db4', 'B3', 'Db4', 'D4', 'E4', 'D4', 'Db4', 'E4', 'D4', 'Db4', 'D4', 'A3', 'E4', 'D4', 'Db4', 'B3', 'Db4', 'B3', 'A3', 'D4', 'Db4', 'Db4', 'Db4', 'B3', 'Db4', 'A3', 'B3', 'Ab3', 'A3', 'Ab3', 'F#3', 'Ab3', 'A3', 'B3', 'Db4', 'Db4', 'Db4', 'B3', 'Db4', 'A3', 'B3', 'Db4', 'D4', 'D4', 'E4', 'D4', 'Db4', 'Db4', 'B3', 'A3', 'D4', 'Db4', 'Ab3', 'Db4', 'B3', 'A3', 'D4', 'Db4', 'F#3'],
+                 ['A4', 'Bb4', 'D4', 'Bb2', 'A2', 'Bb4', 'A4', 'Bb4', 'D4', 'Bb2', 'A2', 'Bb4', 'A4', 'Bb4', 'D4', 'Bb2', 'A2', 'Bb4', 'A4', 'Bb4', 'D4', 'Bb2', 'A2', 'Bb4', 'F5', 'D5', 'E5', 'A4', 'D2', 'D2', 'F5', 'D5', 'E5', 'A4', 'D2', 'D2', 'F5', 'D5', 'E5', 'A4', 'D2', 'D2', 'F5', 'D5', 'E5', 'A4', 'D2', 'D2'],
+                 ['E4', 'Ab4', 'A4', 'C5', 'Eb5', 'E5', 'E4', 'Ab4', 'A4', 'C5', 'Eb5', 'E5', 'E4', 'Ab4', 'A4', 'C5', 'Eb5', 'E5', 'Ab4', 'A4', 'C5', 'Eb5', 'E5', 'Ab4', 'A4', 'C5', 'Eb5', 'E5', 'E5', 'E5', 'Eb5', 'G5', 'Gb5', 'Gb5', 'E5', 'Gb5', 'E5', 'E5', 'Eb5', 'G5', 'Gb5', 'Gb5', 'E5', 'Gb5', 'E5', 'E5', 'D5', 'C5', 'B4', 'Bb4', 'Bb5', 'Bb4', 'E5', 'D5', 'C5', 'B4', 'Bb4', 'Bb5', 'Bb4', 'A4', 'B4', 'A4', 'B4', 'Ab4', 'Ab4', 'G4', 'A4', 'G4', 'A4', 'Gb4', 'Gb4', 'E4', 'Gb4', 'E4', 'Gb4', 'E4', 'Db4', 'D4', 'Eb4', 'E4', 'F4', 'Gb4', 'G4', 'Ab4', 'A4', 'Bb4', 'B4', 'C5', 'B4', 'Bb4', 'B4', 'D5', 'C5', 'B4'],
+                 ['D4', 'G4', 'Bb4', 'D5', 'D5', 'C5', 'Bb4', 'A4', 'Bb4', 'G4', 'Bb4', 'D5', 'G5', 'G5', 'G5', 'F5', 'Eb5', 'F5', 'A4', 'D5', 'F5', 'A5', 'G5', 'F5', 'E5', 'F5', 'G5', 'F5', 'E5', 'D5', 'C5', 'Bb4', 'C5', 'D5', 'C5', 'G4', 'A4', 'D4', 'G4', 'Bb4', 'D5', 'D5', 'C5', 'Bb4', 'A4', 'Bb4', 'G4', 'Bb4', 'D5', 'G5', 'G5', 'G5', 'F5', 'Eb5', 'F5', 'A4', 'D5', 'F5', 'A5', 'G5', 'F5', 'E5', 'Eb5', 'E5', 'G5', 'F5', 'E5', 'D5', 'Db5', 'D5', 'D5', 'C5', 'Bb4', 'A4', 'B5', 'Db5', 'D5'],
+                 ['G4', 'F4', 'G4', 'F4', 'G4', 'F4', 'G4', 'F4', 'G4', 'G4', 'G4', 'G4', 'Bb4', 'F4', 'F4', 'F4', 'F4', 'Bb4', 'F4', 'F4', 'F4', 'F4', 'Bb4', 'Bb4', 'F4', 'F4', 'F4', 'F4', 'F4', 'Eb4', 'G4', 'G4', 'G4', 'G4', 'Bb4', 'Bb4', 'F4', 'F4', 'F4', 'F4', 'G4', 'F4', 'F4', 'F4', 'Eb4', 'G4', 'G4', 'F4', 'F4', 'F4', 'Eb4', 'G4', 'G4', 'F4', 'G4', 'G4', 'G4', 'G4', 'Bb4', 'Bb4', 'F4', 'F4', 'F4', 'F4', 'Bb4', 'Bb4', 'G4', 'G4', 'Eb4', 'G4', 'G4', 'F4', 'F4', 'F4', 'Eb4', 'G4', 'G4', 'F4', 'G4', 'G4', 'G4', 'G4', 'Bb4', 'Bb4', 'F4', 'F4', 'F4', 'F4', 'Bb4', 'Bb4', 'G4', 'G4', 'Eb4', 'G4', 'G4', 'F4', 'F4', 'F4', 'Eb4', 'G4', 'G4'],
+                 ['D4', 'F4', 'D4', 'D4', 'G4', 'D4', 'C4', 'D4', 'A4', 'D4', 'D4', 'Bb4', 'A4', 'F4', 'D4', 'A4', 'D5', 'D4', 'C4', 'C4', 'A3', 'E4', 'D4'],
+                 ['Db6', 'F#6', 'E6', 'Db6', 'F#6', 'E6', 'Gb5', 'Gb5', 'Gb5', 'B5', 'A5', 'B5', 'A5', 'Db6', 'F#6', 'E6', 'Db6', 'F#6', 'E6', 'Gb5', 'Gb5', 'Gb5', 'B5', 'A5', 'B5', 'G5', 'Db6', 'F#6', 'E6', 'Db6', 'F#6', 'E6', 'Gb5', 'Gb5', 'Gb5', 'B5', 'A5', 'B5', 'A5', 'A5', 'G5', 'A5', 'G5', 'Gb5', 'E5', 'A4', 'D5', 'Gb5']]
+
+        const noteFreqsArray = [
+            { note: "D2", freq: 73.42 },
+            { note: "Eb2", freq: 77.78 },
+            { note: "E2", freq: 82.41 },
+            { note: "F2", freq: 87.31 },
+            { note: "F#2", freq: 92.50 },
+            { note: "G2", freq: 98.00 },
+            { note: "G#2", freq: 103.83 },
+            { note: "A2", freq: 110.00 },
+            { note: "Bb2", freq: 116.54 },
+            { note: "B2", freq: 123.47 },
+            { note: "C3", freq: 130.81 },
+            { note: "C#3", freq: 138.59 },
+            { note: "D3", freq: 146.83 },
+            { note: "D#3", freq: 155.56 },
+            { note: "E3", freq: 164.81 },
+            { note: "F3", freq: 174.61 },
+            { note: "F#3", freq: 185.00 },
+            { note: "G3", freq: 196.00 },
+            { note: "Ab3", freq: 207.65 },
+            { note: "A3", freq: 220.00 },
+            { note: "A#3", freq: 233.08 },
+            { note: "B3", freq: 246.94 },
+            { note: "C4", freq: 261.63 },
+            { note: "Db4", freq: 277.18 },
+            { note: "D4", freq: 293.67 },
+            { note: "Eb4", freq: 311.13 },
+            { note: "E4", freq: 329.63 },
+            { note: "F4", freq: 349.23 },
+            { note: "Gb4", freq: 369.99 },
+            { note: "G4", freq: 392.00 },
+            { note: "Ab4", freq: 415.31 },
+            { note: "A4", freq: 440.00 },
+            { note: "Bb4", freq: 466.16 },
+            { note: "B4", freq: 493.88 },
+            { note: "C5", freq: 523.25 },
+            { note: "Db5", freq: 554.37 },
+            { note: "D5", freq: 587.33 },
+            { note: "Eb5", freq: 622.25 },
+            { note: "E5", freq: 659.26 },
+            { note: "F5", freq: 698.46 },
+            { note: "Gb5", freq: 739.99 },
+            { note: "G5", freq: 783.99 },
+            { note: "G#5", freq: 830.61 },
+            { note: "A5", freq: 880.00 },
+            { note: "Bb5", freq: 932.33 },
+            { note: "B5", freq: 987.77 },
+            { note: "C6", freq: 1046.50 },
+            { note: "Db6", freq: 1108.73 },
+            { note: "D6", freq: 1174.66 },
+            { note: "D#6", freq: 1244.51 },
+            { note: "E6", freq: 1318.51 },
+            { note: "F6", freq: 1396.91 },
+            { note: "F#6", freq: 1479.98 }
+        ];
+
+        const synth = new Tone.Synth({
+            oscillator: {
+                type: "sine",
+            },
+            envelope: {
+                attack: 0.2,
+                decay: 0.1,
+                sustain: 0.8,
+                release: 0.2
+            }
+        }).toDestination();
+
+        let currentSequence = null;
+
+        Tone.context.resume().then(() => {
+            console.log("Audio context resumed!");
+        });
+
+        var buttons = [];
+
+        function createSongButtons() {
+            const songContainer = document.getElementById('songButtonsContainer');
+            songs[0].forEach((songName, index) => {
+                const button = document.createElement('button');
+                button.textContent = songName;
+                button.style.margin = '10px';
+                button.onclick = () => getNotes(index, button);
+                songContainer.appendChild(button);
+                buttons.push(button);
+            });
+        }
+
+        function stopCurrentSong() {
+            if (currentSequence) {
+                currentSequence.stop();
+            }
+        }
+
+        var first = null;
+        var second = null;
+
+        function getNotes(index, button) {
+            if (first != null) {
+                if (first == index) {
+                    if (second != null) {
+                        first = second;
+                        second = null;
+                    } else {
+                        first = null;
+                    }
+                } else {
+                    if (second != null) {
+                        if (second == index) {
+                            second = null;
+                        }
+                    } else {
+                        second = index;
+                    }
+                }
+            } else {
+                first = index;
+            }
+            console.log("first: ", first);
+            console.log("second: ", second);
+            for (let b = 0; b < 7; b++) {
+                buttons[b].style.backgroundColor = "#FFFFFF";
+                buttons[b].style.color = "#73CEE4";
+            }
+            if (first != null) {
+                buttons[first].style.backgroundColor = "#99ff99";
+                buttons[first].style.color = "#FFFFFF";
+                if (second != null) {
+                    buttons[second].style.backgroundColor = "#ff9999";
+                    buttons[second].style.color = "#FFFFFF";
+                    interpolateNotes(first, second, speed);
+                } else {
+                    stopCurrentSong();
+                }
+            } else {
+                stopCurrentSong();
+            }
+        }
+
+        function getNearestNote(frequency) {
+            let closestNote = '';
+            let smallestDiff = Infinity;
+
+            for (let i = 0; i < noteFreqsArray.length; i++) {
+                const diff = Math.abs(noteFreqsArray[i].freq - frequency);
+                if (diff < smallestDiff) {
+                    smallestDiff = diff;
+                    closestNote = noteFreqsArray[i].note;
+                }
+                if (diff > smallestDiff) {
+                    break;
+                }
+            }
+            return closestNote;
+        }
+
+        function interpolateNotes(first, second, speed) {
+            song1 = songs[first + 1];
+            song2 = songs[second + 1];
+            songLength = Math.min(song1.length, song2.length);
+            var startingNotes = [];
+            var endingNotes = [];
+            for (let i = 0; i < songLength; i++) {
+                startingNotes.push(song1[i]);
+                endingNotes.push(song2[i]);
+            }
+            cycles = 13 - speed; // speed goes from 1-10, want at least 3 cycles (start, middle, end)
+            var interpolatedNotes = [];
+            scaler = 1 / (cycles - 1);
+            for (let c = 0; c < cycles; c++) {
+                for (let n = 0; n < songLength; n++) {
+                    const noteData1 = noteFreqsArray.find(item => item.note === startingNotes[n]);
+                    freq1 = noteData1.freq;
+                    const noteData2 = noteFreqsArray.find(item => item.note === endingNotes[n]);
+                    freq2 = noteData2.freq;
+                    scale2 = scaler * c;
+                    scale1 = 1 - scale2;
+                    console.log(scale1, scale2);
+                    interpfreq = (scale1 * freq1) + (scale2 * freq2);
+                    interpnote = getNearestNote(interpfreq);
+                    interpolatedNotes.push(interpnote);
+                }
+            }
+
+            playNotes(interpolatedNotes);
+            imgnote2.style.opacity = 0;
+            imgnote1.style.opacity = 1;
+            let noteDuration = Tone.Time("4n").toMilliseconds();
+            for (let t = 1; t < cycles; t++) {
+                setTimeout(((step) => {
+                    return () => {
+                        let opacity2 = scaler * step;
+                        let opacity1 = 1 - opacity2;
+                        imgnote2.style.opacity = opacity2;
+                        imgnote1.style.opacity = opacity1;
+                        console.log(`Step ${step}: imgnote1 = ${opacity1}, imgnote2 = ${opacity2}`);
+                    };
+                })(t), t * noteDuration * songLength);
+            }
+        }
+
+        function playNotes(interpolatedNotes) {
+            stopCurrentSong();
+            currentSequence = new Tone.Sequence((time, note) => {
+                synth.triggerAttackRelease(note, "4n", time);
+            }, interpolatedNotes, "4n");
+            currentSequence.start();
+            Tone.Transport.start();
+
+            let sequenceDuration = interpolatedNotes.length * Tone.Time("4n").toSeconds();
+            setTimeout(() => {
+                Tone.Transport.stop();
+                console.log("Playback complete.");
+            }, sequenceDuration * 1000);
+        }
+
+        createSongButtons();
+    </script>
+</body>
+</html>
